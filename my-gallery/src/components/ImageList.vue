@@ -1,5 +1,5 @@
 <script setup>
-// import ImageCard from "./ImageCard";
+import ImageCard from "./ImageCard.vue";
 const props = defineProps({
   images: Array,
 });

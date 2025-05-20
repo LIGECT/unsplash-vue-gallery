@@ -12,11 +12,13 @@ function onSearch() {
 </script>
 
 <template>
-  <div class="flex gap-2"></div>
-  <input
-    v-model="query"
-    @keyup.enter="onSearch"
-    class="input input-bordered flex-grow"
-  />
-  <button @click="onSearch" class="btn btn-primary">Поиск</button>
+  <div class="flex gap-2 mb-4">
+    <input
+      v-model="query"
+      @keyup.enter="onSearch"
+      class="input input-bordered flex-grow"
+      placeholder="Например: cats, mountains..."
+    />
+    <button @click="onSearch" class="btn btn-primary">Поиск</button>
+  </div>
 </template>

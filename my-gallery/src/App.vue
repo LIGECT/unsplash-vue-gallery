@@ -24,4 +24,22 @@ async function onSearch(querry) {
 }
 </script>
 
-<template>Hello</template>
+<!-- <template>
+  <div class="container mx-auto p-4">
+    <SearchBar @search="onSearch" />
+    <div v-if="isLoading" class="text-center py-8">
+      <span class="loading loading-spinner loading-lg"></span>
+    </div>
+    <div v-else-if="error" class="alert alert-error">{{ error }}</div>
+    <ImageList v-else :images="images" />
+  </div>
+</template> -->
+
+<template>
+  <div class="container mx-auto p-4 bg-gray-100">
+    <!-- Добавлен bg-gray-100 -->
+    <SearchBar @search="onSearch" />
+    <div v-if="isLoading">Загрузка...</div>
+    <ImageList v-else :images="images" />
+  </div>
+</template>
