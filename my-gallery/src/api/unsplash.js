@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_KEY = "5UUMZH0fWgy3Vbna_6Db0z8fDHieeCobLqp49BJiWKk"; // Получи ключ на https://unsplash.com/developers
+const API_KEY = "5UUMZH0fWgy3Vbna_6Db0z8fDHieeCobLqp49BJiWKk";
 const BASE_URL = "https://api.unsplash.com";
 
 const unsplash = axios.create({
@@ -10,7 +10,6 @@ const unsplash = axios.create({
   },
 });
 
-
 export async function searchPhotos(query, perPage = 10) {
   try {
     const response = await unsplash.get("/search/photos", {
@@ -19,7 +18,7 @@ export async function searchPhotos(query, perPage = 10) {
         per_page: perPage,
       },
     });
-    return response.data.results; 
+    return response.data.results;
   } catch (error) {
     console.error("Ошибка при запросе к Unsplash:", error);
     throw error;
