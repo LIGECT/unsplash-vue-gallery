@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from "vue"; // Добавили onMounted и onUnmounted
+import { ref, computed, onMounted, onUnmounted } from "vue";
 import SearchBar from "./components/SearchBar.vue";
 import ImageList from "./components/ImageList.vue";
 import { searchPhotos } from "./api/unsplash.js";
@@ -8,66 +8,77 @@ const images = ref([]);
 const isLoading = ref(false);
 const error = ref(null);
 const filter = ref("all");
-const currentPage = ref(1); // Добавили переменную для текущей страницы
-const currentQuery = ref(""); // Добавили переменную для сохранения текущего запроса
-const hasMoreImages = ref(true); // Добавили флаг, есть ли еще изображения для загрузки
+const currentPage = ref(1);
+const currentQuery = ref("");
+const hasMoreImages = ref(true);
 
-// Функция для выполнения поиска изображений
 async function fetchImages(query, page) {
-  isLoading.value = true;
-  error.value = null;
+  // Устанавливаем isLoading в true только если это первая страница или если это новый запрос
+  if (page === 1) {
+    isLoading.value = true;
+    images.value = []; // Очищаем изображения при новом поиске
+  }
+  error.value = null; // Сбрасываем ошибку перед новым запросом
   try {
-    const results = await searchPhotos(query, page); // Передаем номер страницы
+    const results = await searchPhotos(query, page);
     if (page === 1) {
-      // Если это первая страница, заменяем изображения
       images.value = results;
     } else {
-      // Иначе добавляем новые изображения к существующим
       images.value = [...images.value, ...results];
     }
-    // Проверяем, есть ли еще изображения для загрузки (если результатов меньше, чем per_page, то, возможно, это последняя страница)
+    // Проверяем, есть ли еще изображения для загрузки
     hasMoreImages.value = results.length > 0;
   } catch (e) {
     console.error("Ошибка при поиске фотографий:", e);
-    error.value = "Ошибка загрузки изображений. Пожалуйста, попробуйте снова.";
+    error.value =
+      "Не удалось загрузить изображения. Возможно, проблемы с сетью или API. Пожалуйста, попробуйте снова.";
+    hasMoreImages.value = false; // При ошибке считаем, что больше изображений нет
   } finally {
-    isLoading.value = false;
+    // Сбрасываем isLoading после завершения запроса (успешного или с ошибкой)
+    if (page === 1) {
+      isLoading.value = false;
+    }
   }
 }
 
-// Обработчик нового поиска
 async function onSearch(query) {
-  if (!query) return;
-  currentQuery.value = query; // Сохраняем текущий запрос
-  currentPage.value = 1; // Сбрасываем страницу на первую при новом поиске
-  hasMoreImages.value = true; // Сбрасываем флаг наличия изображений
-  await fetchImages(query, currentPage.value); // Выполняем поиск для первой страницы
-}
-
-// Функция для подгрузки новых изображений
-async function loadMoreImages() {
-  if (isLoading.value || !hasMoreImages.value) {
-    return; // Если уже идет загрузка или нет больше изображений, выходим
+  if (!query) {
+    images.value = []; // Очищаем список, если запрос пустой
+    hasMoreImages.value = false; // Нет смысла загружать еще, если нет запроса
+    return;
   }
-  currentPage.value++; // Увеличиваем номер страницы
-  await fetchImages(currentQuery.value, currentPage.value); // Загружаем следующую страницу
+  currentQuery.value = query;
+  currentPage.value = 1;
+  hasMoreImages.value = true;
+  await fetchImages(query, currentPage.value);
 }
 
-// Обработчик события прокрутки
+async function loadMoreImages() {
+  // Проверяем, идет ли уже загрузка или нет больше изображений для загрузки
+  if (isLoading.value || !hasMoreImages.value) {
+    return;
+  }
+  // Устанавливаем isLoading в true только для дозагрузки (чтобы не перекрывать текущие изображения)
+  isLoading.value = true;
+  currentPage.value++;
+  await fetchImages(currentQuery.value, currentPage.value);
+  isLoading.value = false; // Сбрасываем isLoading после дозагрузки
+}
+
 function handleScroll() {
   const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
   // Проверяем, находится ли пользователь почти внизу страницы
+  // и есть ли текущий запрос, не идет ли уже загрузка и есть ли еще изображения
   if (
     scrollTop + clientHeight >= scrollHeight - 100 &&
     currentQuery.value &&
     !isLoading.value &&
     hasMoreImages.value
   ) {
-    loadMoreImages(); // Если да, загружаем больше изображений
+    loadMoreImages();
   }
 }
 
-// Добавляем и удаляем обработчик события прокрутки при монтировании/размонтировании компонента
 onMounted(() => {
   window.addEventListener("scroll", handleScroll);
 });
@@ -102,29 +113,62 @@ const filteredImages = computed(() => {
 
     <div
       v-if="isLoading && currentPage === 1"
-      class="text-center text-gray-800 text-lg py-4"
+      class="flex justify-center items-center py-10"
     >
-      Загрузка изображений...
+      <span class="loading loading-spinner loading-lg text-emerald-500"></span>
+      <p class="ml-4 text-gray-800 text-lg">Загрузка изображений...</p>
     </div>
-    <div v-else-if="error" class="text-center text-red-500 text-lg py-4">
-      {{ error }}
-    </div>
+
     <div
-      v-else-if="filteredImages.length === 0 && !isLoading"
+      v-else-if="error"
+      class="alert alert-error shadow-lg mt-4 mx-auto max-w-xl"
+    >
+      <div>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="stroke-current flex-shrink-0 h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+        <span>{{ error }}</span>
+      </div>
+    </div>
+
+    <div
+      v-else-if="filteredImages.length === 0 && !isLoading && currentQuery"
       class="text-center text-gray-500 text-lg py-4"
     >
-      Изображений не найдено. Попробуйте другой запрос или фильтр.
+      По вашему запросу "{{ currentQuery }}" изображений не найдено. Попробуйте
+      другой запрос.
     </div>
+    <div
+      v-else-if="filteredImages.length === 0 && !isLoading && !currentQuery"
+      class="text-center text-gray-500 text-lg py-4"
+    >
+      Введите что-нибудь в поиске, чтобы начать.
+    </div>
+
     <ImageList v-else :images="filteredImages" />
 
     <div
       v-if="isLoading && currentPage > 1"
-      class="text-center text-gray-800 text-lg py-4"
+      class="flex justify-center items-center py-4"
     >
-      Загрузка новой порции изображений...
+      <span class="loading loading-dots loading-lg text-emerald-500"></span>
+      <p class="ml-2 text-gray-800 text-md">
+        Загрузка новой порции изображений...
+      </p>
     </div>
+
     <div
-      v-if="!hasMoreImages && filteredImages.length > 0"
+      v-if="!hasMoreImages && filteredImages.length > 0 && !isLoading"
       class="text-center text-gray-500 text-lg py-4"
     >
       Больше изображений нет.
