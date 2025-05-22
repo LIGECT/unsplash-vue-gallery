@@ -1,11 +1,9 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch } from "vue";
+import { ref, computed, onMounted, onUnmounted } from "vue";
 import SearchBar from "./components/SearchBar.vue";
 import ImageList from "./components/ImageList.vue";
 import { searchPhotos } from "./api/unsplash.js";
-// --- Добавления для иконок Heroicons ---
-import { SunIcon, MoonIcon } from "@heroicons/vue/24/outline"; // Импорт иконок
-// --- Конец добавлений для иконок ---
+import { SunIcon, MoonIcon } from "@heroicons/vue/24/outline";
 
 const images = ref([]);
 const isLoading = ref(false);
@@ -14,31 +12,21 @@ const filter = ref("all");
 const currentPage = ref(1);
 const currentQuery = ref("");
 const hasMoreImages = ref(true);
+const theme = ref("light");
 
-// --- Добавления для темы ---
-const theme = ref("light"); // Изначально тема светлая
-
-// Функция для переключения темы
 const toggleTheme = () => {
   theme.value = theme.value === "light" ? "dark" : "light";
-  localStorage.setItem("theme", theme.value); // Сохраняем тему в localStorage
-  document.documentElement.setAttribute("data-theme", theme.value); // Устанавливаем атрибут для DaisyUI
+  localStorage.setItem("theme", theme.value);
+  document.documentElement.setAttribute("data-theme", theme.value);
 };
 
-// Применяем тему при загрузке компонента
 onMounted(() => {
   const savedTheme = localStorage.getItem("theme");
   if (savedTheme) {
     theme.value = savedTheme;
-  } else {
-    // Можно также проверить системные настройки пользователя
-    // if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-    //   theme.value = 'dark';
-    // }
   }
   document.documentElement.setAttribute("data-theme", theme.value);
 });
-// --- Конец добавлений для темы ---
 
 async function fetchImages(query, page) {
   if (page === 1) {
