@@ -1,3 +1,4 @@
+// src/api/unsplash.js
 import axios from "axios";
 
 const API_KEY = "5UUMZH0fWgy3Vbna_6Db0z8fDHieeCobLqp49BJiWKk";
@@ -10,11 +11,12 @@ const unsplash = axios.create({
   },
 });
 
-export async function searchPhotos(query, perPage = 10) {
+export async function searchPhotos(query, page = 1, perPage = 10) {
   try {
     const response = await unsplash.get("/search/photos", {
       params: {
         query,
+        page, // Добавляем параметр страницы
         per_page: perPage,
       },
     });

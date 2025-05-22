@@ -1,27 +1,32 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted, onUnmounted } from "vue"; // Добавили onMounted и onUnmounted
 import SearchBar from "./components/SearchBar.vue";
 import ImageList from "./components/ImageList.vue";
 import { searchPhotos } from "./api/unsplash.js";
 
-const images = ref([]); // Хранит все загруженные изображения
-const isLoading = ref(false); // Флаг состояния загрузки
-const error = ref(null); // Сообщение об ошибке
-const filter = ref("all"); // Текущий выбранный фильтр: "all" или "liked"
+const images = ref([]);
+const isLoading = ref(false);
+const error = ref(null);
+const filter = ref("all");
+const currentPage = ref(1); // Добавили переменную для текущей страницы
+const currentQuery = ref(""); // Добавили переменную для сохранения текущего запроса
+const hasMoreImages = ref(true); // Добавили флаг, есть ли еще изображения для загрузки
 
-/**
- * Асинхронная функция для поиска фотографий по запросу.
- * Устанавливает состояния загрузки и ошибок, а затем обновляет список изображений.
- * @param {string} query - Поисковый запрос.
- */
-async function onSearch(query) {
-  if (!query) return; // Если запрос пустой, ничего не делаем
+// Функция для выполнения поиска изображений
+async function fetchImages(query, page) {
   isLoading.value = true;
   error.value = null;
-  images.value = []; // Очищаем предыдущие изображения
   try {
-    const results = await searchPhotos(query);
-    images.value = results; // Сохраняем полученные изображения
+    const results = await searchPhotos(query, page); // Передаем номер страницы
+    if (page === 1) {
+      // Если это первая страница, заменяем изображения
+      images.value = results;
+    } else {
+      // Иначе добавляем новые изображения к существующим
+      images.value = [...images.value, ...results];
+    }
+    // Проверяем, есть ли еще изображения для загрузки (если результатов меньше, чем per_page, то, возможно, это последняя страница)
+    hasMoreImages.value = results.length > 0;
   } catch (e) {
     console.error("Ошибка при поиске фотографий:", e);
     error.value = "Ошибка загрузки изображений. Пожалуйста, попробуйте снова.";
@@ -30,35 +35,59 @@ async function onSearch(query) {
   }
 }
 
-/**
- * Обрабатывает изменение фильтра из компонента SearchBar.
- * Обновляет реактивную переменную filter.
- * @param {string} value - Новое значение фильтра ("all" или "liked").
- */
+// Обработчик нового поиска
+async function onSearch(query) {
+  if (!query) return;
+  currentQuery.value = query; // Сохраняем текущий запрос
+  currentPage.value = 1; // Сбрасываем страницу на первую при новом поиске
+  hasMoreImages.value = true; // Сбрасываем флаг наличия изображений
+  await fetchImages(query, currentPage.value); // Выполняем поиск для первой страницы
+}
+
+// Функция для подгрузки новых изображений
+async function loadMoreImages() {
+  if (isLoading.value || !hasMoreImages.value) {
+    return; // Если уже идет загрузка или нет больше изображений, выходим
+  }
+  currentPage.value++; // Увеличиваем номер страницы
+  await fetchImages(currentQuery.value, currentPage.value); // Загружаем следующую страницу
+}
+
+// Обработчик события прокрутки
+function handleScroll() {
+  const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
+  // Проверяем, находится ли пользователь почти внизу страницы
+  if (
+    scrollTop + clientHeight >= scrollHeight - 100 &&
+    currentQuery.value &&
+    !isLoading.value &&
+    hasMoreImages.value
+  ) {
+    loadMoreImages(); // Если да, загружаем больше изображений
+  }
+}
+
+// Добавляем и удаляем обработчик события прокрутки при монтировании/размонтировании компонента
+onMounted(() => {
+  window.addEventListener("scroll", handleScroll);
+});
+
+onUnmounted(() => {
+  window.removeEventListener("scroll", handleScroll);
+});
+
 function onFilterChange(value) {
   filter.value = value;
 }
 
-/**
- * Вспомогательная функция для получения списка ID лайкнутых изображений из localStorage.
- * Дублирует логику, используемую в ImageCard, для согласованности.
- * @returns {Array<string>} Массив ID лайкнутых изображений.
- */
 function getLikedImages() {
   const data = localStorage.getItem("likedImages");
   return data ? JSON.parse(data) : [];
 }
 
-/**
- * Вычисляемое свойство, которое возвращает отфильтрованный список изображений.
- * Если фильтр установлен на "liked", возвращает только понравившиеся изображения.
- * В противном случае возвращает все загруженные изображения.
- * @returns {Array<Object>} Отфильтрованный список изображений.
- */
 const filteredImages = computed(() => {
   if (filter.value === "liked") {
     const likedIds = getLikedImages();
-
     return images.value.filter((img) => likedIds.includes(img.id));
   }
   return images.value;
@@ -71,18 +100,34 @@ const filteredImages = computed(() => {
   >
     <SearchBar @search="onSearch" @filterChange="onFilterChange" />
 
-    <div v-if="isLoading" class="text-center text-gray-800 text-lg py-4">
+    <div
+      v-if="isLoading && currentPage === 1"
+      class="text-center text-gray-800 text-lg py-4"
+    >
       Загрузка изображений...
     </div>
     <div v-else-if="error" class="text-center text-red-500 text-lg py-4">
       {{ error }}
     </div>
     <div
-      v-else-if="filteredImages.length === 0"
+      v-else-if="filteredImages.length === 0 && !isLoading"
       class="text-center text-gray-500 text-lg py-4"
     >
       Изображений не найдено. Попробуйте другой запрос или фильтр.
     </div>
     <ImageList v-else :images="filteredImages" />
+
+    <div
+      v-if="isLoading && currentPage > 1"
+      class="text-center text-gray-800 text-lg py-4"
+    >
+      Загрузка новой порции изображений...
+    </div>
+    <div
+      v-if="!hasMoreImages && filteredImages.length > 0"
+      class="text-center text-gray-500 text-lg py-4"
+    >
+      Больше изображений нет.
+    </div>
   </div>
 </template>
