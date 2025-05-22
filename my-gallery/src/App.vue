@@ -2,19 +2,19 @@
 import { ref } from "vue";
 import SearchBar from "./components/SearchBar.vue";
 import ImageList from "./components/ImageList.vue";
-import ImageCard from "./components/ImageCard.vue";
 import { searchPhotos } from "./api/unsplash.js";
 
 const images = ref([]);
-
 const isLoading = ref(false);
 const error = ref(null);
 
-async function onSearch(querry) {
+async function onSearch(query) {
+  if (!query) return;
   isLoading.value = true;
   error.value = null;
+  images.value = [];
   try {
-    const results = await searchPhotos(querry);
+    const results = await searchPhotos(query);
     images.value = results;
   } catch (e) {
     error.value = "Ошибка загрузки изображений";
@@ -24,22 +24,11 @@ async function onSearch(querry) {
 }
 </script>
 
-<!-- <template>
-  <div class="container mx-auto p-4">
-    <SearchBar @search="onSearch" />
-    <div v-if="isLoading" class="text-center py-8">
-      <span class="loading loading-spinner loading-lg"></span>
-    </div>
-    <div v-else-if="error" class="alert alert-error">{{ error }}</div>
-    <ImageList v-else :images="images" />
-  </div>
-</template> -->
-
 <template>
   <div class="container mx-auto p-4 bg-gray-100">
-    <!-- Добавлен bg-gray-100 -->
     <SearchBar @search="onSearch" />
-    <div v-if="isLoading">Загрузка...</div>
+    <div v-if="isLoading" class="text-center">Загрузка...</div>
+    <div v-else-if="error" class="text-center text-red-500">{{ error }}</div>
     <ImageList v-else :images="images" />
   </div>
 </template>
