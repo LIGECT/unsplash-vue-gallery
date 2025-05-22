@@ -13,32 +13,29 @@ const props = defineProps({
 const liked = ref(false);
 const STORAGE_KEY = "likedImages";
 
-// Получаем список лайкнутых из localStorage
 function getLikedImages() {
   const data = localStorage.getItem(STORAGE_KEY);
   return data ? JSON.parse(data) : [];
 }
 
-// Сохраняем список лайкнутых в localStorage
 function setLikedImages(arr) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
 }
 
-// Проверяем, лайкнуто ли текущее изображение
 function checkLiked() {
   const likedImages = getLikedImages();
   liked.value = likedImages.includes(props.image.id);
 }
 
-// Обработка клика по лайку
 function toggleLike() {
   const likedImages = getLikedImages();
   if (liked.value) {
-    // Удаляем из массива
-    likedImages.splice(likedImages.indexOf(props.image.id), 1);
+    const index = likedImages.indexOf(props.image.id);
+    if (index > -1) {
+      likedImages.splice(index, 1);
+    }
     liked.value = false;
   } else {
-    // Добавляем в массив
     likedImages.push(props.image.id);
     liked.value = true;
   }
@@ -51,29 +48,48 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="rounded overflow-hidden shadow-lg bg-white">
-    <img
-      :src="image.urls.small"
-      :alt="image.alt_description || 'Без описания'"
-      class="w-full h-48 object-cover"
-    />
-    <div class="p-4">
-      <p class="font-semibold">{{ image.user.name }}</p>
-      <p class="text-sm text-gray-600 mb-2">
+  <div
+    class="relative flex flex-col rounded-2xl shadow-md bg-white transition-all duration-300 hover:shadow-lg hover:scale-105 overflow-hidden group border border-gray-100"
+  >
+    <div class="w-full aspect-w-16 aspect-h-9 sm:aspect-h-12 lg:aspect-h-10">
+      <img
+        :src="image.urls.small"
+        :alt="image.alt_description || 'Изображение без описания'"
+        class="w-full h-full object-cover"
+      />
+    </div>
+
+    <div class="p-4 flex flex-col flex-grow">
+      <h3 class="font-semibold text-gray-800 text-lg line-clamp-1">
+        {{ image.user.name || "Неизвестный автор" }}
+      </h3>
+      <p class="text-sm text-gray-500 mb-3 line-clamp-2">
         {{ image.description || image.alt_description || "Без описания" }}
       </p>
-      <div class="flex justify-between items-center">
+
+      <div
+        class="mt-auto flex justify-between items-center pt-2 border-t border-gray-50"
+      >
         <a
           :href="image.links.html"
           target="_blank"
-          class="btn btn-xs btn-outline"
-          >Открыть</a
+          class="btn btn-sm rounded-full border border-emerald-500 text-emerald-500 bg-white hover:bg-emerald-500 hover:text-white transition-colors duration-300 px-4 py-2"
         >
-        <button @click="toggleLike" class="focus:outline-none">
+          Открыть
+        </a>
+
+        <button
+          @click="toggleLike"
+          class="btn btn-circle btn-sm bg-white hover:bg-gray-100 border-none shadow-none text-gray-400 hover:text-emerald-500 transition-colors duration-300"
+        >
           <component
             :is="liked ? HeartIconSolid : HeartIconOutline"
-            class="w-5 h-5"
-            :class="liked ? 'text-red-500' : 'text-gray-400 hover:text-red-500'"
+            class="w-6 h-6"
+            :class="
+              liked
+                ? 'text-red-500'
+                : 'text-gray-400 group-hover:text-emerald-500'
+            "
           />
         </button>
       </div>
