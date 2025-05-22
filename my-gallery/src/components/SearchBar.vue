@@ -19,13 +19,13 @@ function onFilterChange() {
 
 <template>
   <div
-    class="flex flex-col gap-4 mb-8 p-6 bg-white rounded-2xl shadow-md border border-gray-100"
+    class="flex flex-col gap-4 mb-8 p-6 bg-base-200 rounded-2xl shadow-md border border-base-300"
   >
     <div class="flex flex-col sm:flex-row gap-3">
       <input
         v-model="query"
         @keyup.enter="onSearch"
-        class="input input-bordered flex-grow text-gray-200 placeholder-gray-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 rounded-xl px-4 py-3 transition-all duration-300 border-gray-300 **bg-white**"
+        class="input input-bordered flex-grow text-base-content placeholder-base-content/50 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 rounded-xl px-4 py-3 transition-all duration-300 border-base-300 bg-base-100"
         placeholder="Например: cats, mountains, nature..."
       />
       <button
@@ -37,14 +37,14 @@ function onFilterChange() {
       </button>
     </div>
 
-    <div class="flex gap-6 items-center text-gray-800 text-base">
+    <div class="flex gap-6 items-center text-base-content text-base">
       <label class="cursor-pointer flex items-center group">
         <input
           type="radio"
           value="all"
           v-model="filter"
           @change="onFilterChange"
-          class="radio radio-success mr-2 checked:bg-emerald-500 border-gray-300 group-hover:border-emerald-500 transition-all duration-200"
+          class="radio radio-success mr-2 checked:bg-emerald-500 border-base-300 group-hover:border-emerald-500 transition-all duration-200"
         />
         <span class="group-hover:text-emerald-500 transition-all duration-200"
           >Все</span
@@ -56,7 +56,7 @@ function onFilterChange() {
           value="liked"
           v-model="filter"
           @change="onFilterChange"
-          class="radio radio-success mr-2 checked:bg-emerald-500 border-gray-300 group-hover:border-emerald-500 transition-all duration-200"
+          class="radio radio-success mr-2 checked:bg-emerald-500 border-base-300 group-hover:border-emerald-500 transition-all duration-200"
         />
         <span class="group-hover:text-emerald-500 transition-all duration-200"
           >Понравившиеся</span

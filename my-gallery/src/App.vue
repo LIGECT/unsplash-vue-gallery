@@ -1,8 +1,11 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from "vue";
+import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 import SearchBar from "./components/SearchBar.vue";
 import ImageList from "./components/ImageList.vue";
 import { searchPhotos } from "./api/unsplash.js";
+// --- Добавления для иконок Heroicons ---
+import { SunIcon, MoonIcon } from "@heroicons/vue/24/outline"; // Импорт иконок
+// --- Конец добавлений для иконок ---
 
 const images = ref([]);
 const isLoading = ref(false);
@@ -11,6 +14,31 @@ const filter = ref("all");
 const currentPage = ref(1);
 const currentQuery = ref("");
 const hasMoreImages = ref(true);
+
+// --- Добавления для темы ---
+const theme = ref("light"); // Изначально тема светлая
+
+// Функция для переключения темы
+const toggleTheme = () => {
+  theme.value = theme.value === "light" ? "dark" : "light";
+  localStorage.setItem("theme", theme.value); // Сохраняем тему в localStorage
+  document.documentElement.setAttribute("data-theme", theme.value); // Устанавливаем атрибут для DaisyUI
+};
+
+// Применяем тему при загрузке компонента
+onMounted(() => {
+  const savedTheme = localStorage.getItem("theme");
+  if (savedTheme) {
+    theme.value = savedTheme;
+  } else {
+    // Можно также проверить системные настройки пользователя
+    // if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    //   theme.value = 'dark';
+    // }
+  }
+  document.documentElement.setAttribute("data-theme", theme.value);
+});
+// --- Конец добавлений для темы ---
 
 async function fetchImages(query, page) {
   if (page === 1) {
@@ -101,19 +129,26 @@ const filteredImages = computed(() => {
 
 <template>
   <div
-    class="min-h-screen bg-gray-50 text-gray-800 font-sans leading-relaxed flex flex-col items-center"
+    class="min-h-screen bg-base-100 text-base-content font-sans leading-relaxed flex flex-col items-center"
   >
     <div class="container mx-auto px-4 py-8 max-w-7xl w-full">
+      <div class="flex justify-end mb-4">
+        <button
+          @click="toggleTheme"
+          class="btn btn-ghost btn-circle hover:text-emerald-500 transition-colors duration-200"
+        >
+          <SunIcon v-if="theme === 'light'" class="h-6 w-6" />
+          <MoonIcon v-else class="h-6 w-6" />
+        </button>
+      </div>
       <SearchBar @search="onSearch" @filterChange="onFilterChange" />
 
       <div
         v-if="isLoading && currentPage === 1"
         class="flex flex-col items-center justify-center py-20"
       >
-        <span
-          class="loading loading-spinner loading-lg text-emerald-500"
-        ></span>
-        <p class="mt-4 text-lg text-gray-800">Загрузка изображений...</p>
+        <span class="loading loading-spinner loading-lg text-primary"></span>
+        <p class="mt-4 text-lg text-base-content">Загрузка изображений...</p>
       </div>
 
       <div
@@ -142,9 +177,9 @@ const filteredImages = computed(() => {
         v-else-if="
           filteredImages.length === 0 && !isLoading && currentQuery && !error
         "
-        class="text-center text-gray-500 text-lg py-12"
+        class="text-center text-base-content text-lg py-12"
       >
-        По вашему запросу "<span class="font-medium text-gray-800">{{
+        По вашему запросу "<span class="font-medium text-base-content">{{
           currentQuery
         }}</span
         >" изображений не найдено. Попробуйте другой запрос.
@@ -154,7 +189,7 @@ const filteredImages = computed(() => {
         v-else-if="
           filteredImages.length === 0 && !isLoading && !currentQuery && !error
         "
-        class="text-center text-gray-500 text-lg py-12"
+        class="text-center text-base-content text-lg py-12"
       >
         Введите что-нибудь в поиске, чтобы начать вашу галерею изображений.
       </div>
@@ -165,15 +200,15 @@ const filteredImages = computed(() => {
         v-if="isLoading && currentPage > 1"
         class="flex flex-col items-center justify-center py-8"
       >
-        <span class="loading loading-dots loading-lg text-emerald-500"></span>
-        <p class="mt-2 text-md text-gray-800">
+        <span class="loading loading-dots loading-lg text-primary"></span>
+        <p class="mt-2 text-md text-base-content">
           Загрузка новой порции изображений...
         </p>
       </div>
 
       <div
         v-if="!hasMoreImages && filteredImages.length > 0 && !isLoading"
-        class="text-center text-gray-500 text-lg py-8"
+        class="text-center text-base-content text-lg py-8"
       >
         Больше изображений нет.
       </div>

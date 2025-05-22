@@ -49,7 +49,7 @@ onMounted(() => {
 
 <template>
   <div
-    class="relative flex flex-col rounded-2xl shadow-md bg-white transition-all duration-300 hover:shadow-lg hover:scale-105 overflow-hidden group border border-gray-100"
+    class="relative flex flex-col rounded-2xl shadow-md bg-base-100 transition-all duration-300 hover:shadow-lg hover:scale-105 overflow-hidden group border border-base-300"
   >
     <div class="w-full aspect-w-16 aspect-h-9 sm:aspect-h-12 lg:aspect-h-10">
       <img
@@ -60,27 +60,27 @@ onMounted(() => {
     </div>
 
     <div class="p-4 flex flex-col flex-grow">
-      <h3 class="font-semibold text-gray-800 text-lg line-clamp-1">
+      <h3 class="font-semibold text-base-content text-lg line-clamp-1">
         {{ image.user.name || "Неизвестный автор" }}
       </h3>
-      <p class="text-sm text-gray-500 mb-3 line-clamp-2">
+      <p class="text-sm text-base-content/80 mb-3 line-clamp-2">
         {{ image.description || image.alt_description || "Без описания" }}
       </p>
 
       <div
-        class="mt-auto flex justify-between items-center pt-2 border-t border-gray-50"
+        class="mt-auto flex justify-between items-center pt-2 border-t border-base-300"
       >
         <a
           :href="image.links.html"
           target="_blank"
-          class="btn btn-sm rounded-full border border-emerald-500 text-emerald-500 bg-white hover:bg-emerald-500 hover:text-white transition-colors duration-300 px-4 py-2"
+          class="btn btn-sm rounded-full border border-emerald-500 text-emerald-500 bg-base-100 hover:bg-emerald-500 hover:text-white transition-colors duration-300 px-4 py-2"
         >
           Открыть
         </a>
 
         <button
           @click="toggleLike"
-          class="btn btn-circle btn-sm bg-white hover:bg-gray-100 border-none shadow-none text-gray-400 hover:text-emerald-500 transition-colors duration-300"
+          class="btn btn-circle btn-sm bg-base-100 hover:bg-base-200 border-none shadow-none text-base-content/60 hover:text-emerald-500 transition-colors duration-300"
         >
           <component
             :is="liked ? HeartIconSolid : HeartIconOutline"
@@ -88,7 +88,7 @@ onMounted(() => {
             :class="
               liked
                 ? 'text-red-500'
-                : 'text-gray-400 group-hover:text-emerald-500'
+                : 'text-base-content/60 group-hover:text-emerald-500'
             "
           />
         </button>
