@@ -21,7 +21,7 @@ A responsive image gallery powered by Vue 3 and Unsplash API. Features infinite 
 
 ```bash
 git clone https://github.com/LIGECT/unsplash-vue-gallery.git
-cd unsplash-vue-gallery
+cd my-gallery
 npm install
 npm run dev
 ```
