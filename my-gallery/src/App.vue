@@ -1,130 +1,24 @@
+<!-- src/App.vue -->
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from "vue";
+import { SunIcon, MoonIcon } from "@heroicons/vue/24/outline";
 import SearchBar from "./components/SearchBar.vue";
 import ImageList from "./components/ImageList.vue";
-import { searchPhotos } from "./api/unsplash.js";
-import { SunIcon, MoonIcon } from "@heroicons/vue/24/outline";
+import { useTheme } from "./composables/useTheme";
+import { useColumnCount } from "./composables/useColumnCount";
+import { useImageSearch } from "./composables/useImageSearch";
 
-const images = ref([]);
-const isLoading = ref(false);
-const error = ref(null);
-const filter = ref("all");
-const currentPage = ref(1);
-const currentQuery = ref("");
-const hasMoreImages = ref(true);
-const theme = ref("light");
-const columnCount = ref(3); 
-
-const toggleTheme = () => {
-  theme.value = theme.value === "light" ? "dark" : "light";
-  localStorage.setItem("theme", theme.value);
-  document.documentElement.setAttribute("data-theme", theme.value);
-};
-
-// Функция для обновления ко
-const updateColumnCount = (count) => {
-  columnCount.value = count;
-  localStorage.setItem("columnCount", count);
-};
-
-onMounted(() => {
-  const savedTheme = localStorage.getItem("theme");
-  if (savedTheme) {
-    theme.value = savedTheme;
-  }
-  document.documentElement.setAttribute("data-theme", theme.value);
-
-  const savedColumnCount = localStorage.getItem("columnCount");
-  if (savedColumnCount) {
-    columnCount.value = parseInt(savedColumnCount);
-  }
-});
-
-async function fetchImages(query, page) {
-  if (page === 1) {
-    isLoading.value = true;
-    images.value = [];
-  }
-  error.value = null;
-  try {
-    const results = await searchPhotos(query, page);
-    if (page === 1) {
-      images.value = results;
-    } else {
-      images.value = [...images.value, ...results];
-    }
-    hasMoreImages.value = results.length > 0;
-  } catch (e) {
-    console.error("Ошибка при поиске фотографий:", e);
-    error.value =
-      "Не удалось загрузить изображения. Возможно, проблемы с сетью или API. Пожалуйста, попробуйте снова.";
-    hasMoreImages.value = false;
-  } finally {
-    if (page === 1) {
-      isLoading.value = false;
-    }
-  }
-}
-
-async function onSearch(query) {
-  if (!query) {
-    images.value = [];
-    hasMoreImages.value = false;
-    error.value = null;
-    return;
-  }
-  currentQuery.value = query;
-  currentPage.value = 1;
-  hasMoreImages.value = true;
-  await fetchImages(query, currentPage.value);
-}
-
-async function loadMoreImages() {
-  if (isLoading.value || !hasMoreImages.value) {
-    return;
-  }
-  isLoading.value = true;
-  currentPage.value++;
-  await fetchImages(currentQuery.value, currentPage.value);
-  isLoading.value = false;
-}
-
-function handleScroll() {
-  const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
-  if (
-    scrollTop + clientHeight >= scrollHeight - 300 &&
-    currentQuery.value &&
-    !isLoading.value &&
-    hasMoreImages.value
-  ) {
-    loadMoreImages();
-  }
-}
-
-onMounted(() => {
-  window.addEventListener("scroll", handleScroll);
-});
-
-onUnmounted(() => {
-  window.removeEventListener("scroll", handleScroll);
-});
-
-function onFilterChange(value) {
-  filter.value = value;
-}
-
-function getLikedImages() {
-  const data = localStorage.getItem("likedImages");
-  return data ? JSON.parse(data) : [];
-}
-
-const filteredImages = computed(() => {
-  if (filter.value === "liked") {
-    const likedIds = getLikedImages();
-    return images.value.filter((img) => likedIds.includes(img.id));
-  }
-  return images.value;
-});
+const { theme, toggleTheme } = useTheme();
+const { columnCount, updateColumnCount } = useColumnCount();
+const {
+  filteredImages,
+  isLoading,
+  error,
+  currentQuery,
+  hasMoreImages,
+  onSearch,
+  loadMoreImages,
+  onFilterChange,
+} = useImageSearch();
 </script>
 
 <template>
@@ -136,37 +30,17 @@ const filteredImages = computed(() => {
         <div class="flex items-center gap-2">
           <span class="text-base-content mr-2">Сетка:</span>
           <button
-            @click="updateColumnCount(2)"
+            v-for="count in [2, 3, 4]"
+            :key="count"
+            @click="updateColumnCount(count)"
             :class="[
               'btn btn-sm',
-              columnCount === 2
+              columnCount === count
                 ? 'bg-emerald-500 text-white border-emerald-500'
                 : 'btn-outline border-emerald-500 text-base-content hover:bg-emerald-500 hover:text-white',
             ]"
           >
-            2
-          </button>
-          <button
-            @click="updateColumnCount(3)"
-            :class="[
-              'btn btn-sm',
-              columnCount === 3
-                ? 'bg-emerald-500 text-white border-emerald-500'
-                : 'btn-outline border-emerald-500 text-base-content hover:bg-emerald-500 hover:text-white',
-            ]"
-          >
-            3
-          </button>
-          <button
-            @click="updateColumnCount(4)"
-            :class="[
-              'btn btn-sm',
-              columnCount === 4
-                ? 'bg-emerald-500 text-white border-emerald-500'
-                : 'btn-outline border-emerald-500 text-base-content hover:bg-emerald-500 hover:text-white',
-            ]"
-          >
-            4
+            {{ count }}
           </button>
         </div>
         <button
@@ -177,10 +51,11 @@ const filteredImages = computed(() => {
           <MoonIcon v-else class="h-6 w-6" />
         </button>
       </div>
+
       <SearchBar @search="onSearch" @filterChange="onFilterChange" />
 
       <div
-        v-if="isLoading && currentPage === 1"
+        v-if="isLoading && filteredImages.length === 0"
         class="flex flex-col items-center justify-center py-20"
       >
         <span class="loading loading-spinner loading-lg text-primary"></span>
@@ -238,7 +113,7 @@ const filteredImages = computed(() => {
       />
 
       <div
-        v-if="isLoading && currentPage > 1"
+        v-if="isLoading && filteredImages.length > 0"
         class="flex flex-col items-center justify-center py-8"
       >
         <span class="loading loading-dots loading-lg text-primary"></span>
