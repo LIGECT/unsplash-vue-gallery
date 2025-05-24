@@ -1,5 +1,5 @@
 <script setup>
-import { ref, defineEmits } from "vue";
+import { ref } from "vue";
 import { MagnifyingGlassIcon } from "@heroicons/vue/24/outline";
 
 const query = ref("");
