@@ -13,7 +13,7 @@ const currentPage = ref(1);
 const currentQuery = ref("");
 const hasMoreImages = ref(true);
 const theme = ref("light");
-const columnCount = ref(3); // Добавляем новую переменную для количества колонок
+const columnCount = ref(3); 
 
 const toggleTheme = () => {
   theme.value = theme.value === "light" ? "dark" : "light";
@@ -21,7 +21,7 @@ const toggleTheme = () => {
   document.documentElement.setAttribute("data-theme", theme.value);
 };
 
-// Функция для обновления количества колонок и сохранения в localStorage
+// Функция для обновления ко
 const updateColumnCount = (count) => {
   columnCount.value = count;
   localStorage.setItem("columnCount", count);
@@ -34,7 +34,6 @@ onMounted(() => {
   }
   document.documentElement.setAttribute("data-theme", theme.value);
 
-  // Загружаем сохраненное количество колонок при монтировании
   const savedColumnCount = localStorage.getItem("columnCount");
   if (savedColumnCount) {
     columnCount.value = parseInt(savedColumnCount);
