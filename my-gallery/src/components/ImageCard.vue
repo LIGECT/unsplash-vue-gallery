@@ -51,11 +51,11 @@ onMounted(() => {
   <div
     class="relative flex flex-col rounded-2xl shadow-md bg-base-100 transition-all duration-300 hover:shadow-lg hover:scale-105 overflow-hidden group border border-base-300"
   >
-    <div class="w-full aspect-w-16 aspect-h-9 sm:aspect-h-12 lg:aspect-h-10">
+    <div class="w-full">
       <img
         :src="image.urls.small"
         :alt="image.alt_description || 'Изображение без описания'"
-        class="w-full h-full object-cover"
+        class="w-full h-auto object-cover"
       />
     </div>
 
