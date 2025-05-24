@@ -1,9 +1,2 @@
 @import "tailwindcss";
-@import "daisyui";
-
-@media (min-width: 768px) {
-  .masonry-grid {
-    grid-auto-rows: 10px;
-    grid-auto-flow: row dense;
-  }
-}
+@plugin "daisyui";

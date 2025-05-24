@@ -11,21 +11,19 @@ const props = defineProps({
 });
 
 const gridClasses = computed(() => {
-  let classes = 'grid gap-6 p-4 md:p-6';
 
-  classes += ' grid-cols-1 sm:grid-cols-2';
+  let baseClasses = 'grid grid-cols-1 sm:grid-cols-2 gap-6 p-4 md:p-6';
+  let dynamicMdClass = '';
 
   if (props.columnCount === 2) {
-    classes += ' md:grid-cols-2';
+    dynamicMdClass = 'md:grid-cols-2';
   } else if (props.columnCount === 3) {
-    classes += ' md:grid-cols-3';
+    dynamicMdClass = 'md:grid-cols-3';
   } else if (props.columnCount === 4) {
-    classes += ' md:grid-cols-4';
+    dynamicMdClass = 'md:grid-cols-4';
   }
 
-  classes += ' md:masonry-grid';
-
-  return classes;
+  return `${baseClasses} ${dynamicMdClass}`;
 });
 </script>
 
