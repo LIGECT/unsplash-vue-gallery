@@ -1,19 +1,44 @@
-import { ref, computed, onMounted, onUnmounted } from "vue";
+import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 import { searchPhotos } from "../api/unsplash.js";
 
 export function useImageSearch() {
   const images = ref([]);
+  const likedImages = ref([]);
   const isLoading = ref(false);
   const error = ref(null);
   const filter = ref("all");
-  const currentPage = ref(1);
   const currentQuery = ref("");
-  const hasMoreImages = ref(true);
+  const currentPage = ref(1);
+  const hasMoreApiImages = ref(true);
+
+  function getLikedImagesFromLocalStorage() {
+    const data = localStorage.getItem("likedImages");
+    return data ? JSON.parse(data) : [];
+  }
+
+  function loadLikedImages() {
+    const likedIds = getLikedImagesFromLocalStorage();
+    likedImages.value = images.value.filter((img) => likedIds.includes(img.id));
+  }
+
+  watch(filter, (newFilter) => {
+    if (newFilter === "liked") {
+      loadLikedImages();
+    } else {
+      likedImages.value = [];
+    }
+  });
 
   async function fetchImages(query, page) {
+    if (filter.value === "liked") {
+      isLoading.value = false;
+      return;
+    }
+
     if (page === 1) {
       isLoading.value = true;
       images.value = [];
+      hasMoreApiImages.value = true;
     }
     error.value = null;
     try {
@@ -23,49 +48,52 @@ export function useImageSearch() {
       } else {
         images.value = [...images.value, ...results];
       }
-      hasMoreImages.value = results.length > 0;
+      hasMoreApiImages.value = results.length > 0;
     } catch (e) {
       console.error("Ошибка при поиске фотографий:", e);
       error.value =
         "Не удалось загрузить изображения. Возможно, проблемы с сетью или API. Пожалуйста, попробуйте снова.";
-      hasMoreImages.value = false;
+      hasMoreApiImages.value = false;
     } finally {
-      if (page === 1) {
-        isLoading.value = false;
-      }
+      isLoading.value = false;
     }
   }
 
   async function onSearch(query) {
+    filter.value = "all";
     if (!query) {
       images.value = [];
-      hasMoreImages.value = false;
+      hasMoreApiImages.value = false;
       error.value = null;
       return;
     }
     currentQuery.value = query;
     currentPage.value = 1;
-    hasMoreImages.value = true;
     await fetchImages(query, currentPage.value);
   }
 
   async function loadMoreImages() {
-    if (isLoading.value || !hasMoreImages.value) {
+    if (
+      isLoading.value ||
+      filter.value === "liked" ||
+      !hasMoreApiImages.value
+    ) {
       return;
     }
     isLoading.value = true;
     currentPage.value++;
     await fetchImages(currentQuery.value, currentPage.value);
-    isLoading.value = false;
   }
 
   function handleScroll() {
     const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
+
     if (
       scrollTop + clientHeight >= scrollHeight - 300 &&
+      filter.value === "all" &&
       currentQuery.value &&
       !isLoading.value &&
-      hasMoreImages.value
+      hasMoreApiImages.value
     ) {
       loadMoreImages();
     }
@@ -83,14 +111,9 @@ export function useImageSearch() {
     filter.value = value;
   }
 
-  function getLikedImages() {
-    const data = localStorage.getItem("likedImages");
-    return data ? JSON.parse(data) : [];
-  }
-
   const filteredImages = computed(() => {
     if (filter.value === "liked") {
-      const likedIds = getLikedImages();
+      const likedIds = getLikedImagesFromLocalStorage();
       return images.value.filter((img) => likedIds.includes(img.id));
     }
     return images.value;
@@ -102,10 +125,10 @@ export function useImageSearch() {
     error,
     filter,
     currentQuery,
-    hasMoreImages,
     filteredImages,
     onSearch,
     loadMoreImages,
     onFilterChange,
+    hasMoreApiImages,
   };
 }
