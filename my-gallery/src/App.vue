@@ -13,11 +13,18 @@ const currentPage = ref(1);
 const currentQuery = ref("");
 const hasMoreImages = ref(true);
 const theme = ref("light");
+const columnCount = ref(3); // Добавляем новую переменную для количества колонок
 
 const toggleTheme = () => {
   theme.value = theme.value === "light" ? "dark" : "light";
   localStorage.setItem("theme", theme.value);
   document.documentElement.setAttribute("data-theme", theme.value);
+};
+
+// Функция для обновления количества колонок и сохранения в localStorage
+const updateColumnCount = (count) => {
+  columnCount.value = count;
+  localStorage.setItem("columnCount", count);
 };
 
 onMounted(() => {
@@ -26,6 +33,12 @@ onMounted(() => {
     theme.value = savedTheme;
   }
   document.documentElement.setAttribute("data-theme", theme.value);
+
+  // Загружаем сохраненное количество колонок при монтировании
+  const savedColumnCount = localStorage.getItem("columnCount");
+  if (savedColumnCount) {
+    columnCount.value = parseInt(savedColumnCount);
+  }
 });
 
 async function fetchImages(query, page) {
@@ -120,7 +133,43 @@ const filteredImages = computed(() => {
     class="min-h-screen bg-base-100 text-base-content font-sans leading-relaxed flex flex-col items-center"
   >
     <div class="container mx-auto px-4 py-8 max-w-7xl w-full">
-      <div class="flex justify-end mb-4">
+      <div class="flex justify-between items-center mb-4">
+        <div class="flex items-center gap-2">
+          <span class="text-base-content mr-2">Сетка:</span>
+          <button
+            @click="updateColumnCount(2)"
+            :class="[
+              'btn btn-sm',
+              columnCount === 2
+                ? 'bg-emerald-500 text-white border-emerald-500'
+                : 'btn-outline border-emerald-500 text-base-content hover:bg-emerald-500 hover:text-white',
+            ]"
+          >
+            2
+          </button>
+          <button
+            @click="updateColumnCount(3)"
+            :class="[
+              'btn btn-sm',
+              columnCount === 3
+                ? 'bg-emerald-500 text-white border-emerald-500'
+                : 'btn-outline border-emerald-500 text-base-content hover:bg-emerald-500 hover:text-white',
+            ]"
+          >
+            3
+          </button>
+          <button
+            @click="updateColumnCount(4)"
+            :class="[
+              'btn btn-sm',
+              columnCount === 4
+                ? 'bg-emerald-500 text-white border-emerald-500'
+                : 'btn-outline border-emerald-500 text-base-content hover:bg-emerald-500 hover:text-white',
+            ]"
+          >
+            4
+          </button>
+        </div>
         <button
           @click="toggleTheme"
           class="btn btn-ghost btn-circle hover:text-emerald-500 transition-colors duration-200"
@@ -182,7 +231,12 @@ const filteredImages = computed(() => {
         Введите что-нибудь в поиске, чтобы начать вашу галерею изображений.
       </div>
 
-      <ImageList v-else :images="filteredImages" class="mt-8" />
+      <ImageList
+        v-else
+        :images="filteredImages"
+        :columnCount="columnCount"
+        class="mt-8"
+      />
 
       <div
         v-if="isLoading && currentPage > 1"
