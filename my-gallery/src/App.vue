@@ -1,4 +1,3 @@
-<!-- src/App.vue -->
 <script setup>
 import { SunIcon, MoonIcon } from "@heroicons/vue/24/outline";
 import SearchBar from "./components/SearchBar.vue";
@@ -27,7 +26,7 @@ const {
   >
     <div class="container mx-auto px-4 py-8 max-w-7xl w-full">
       <div class="flex justify-between items-center mb-4">
-        <div class="flex items-center gap-2">
+        <div class="hidden md:flex items-center gap-2">
           <span class="text-base-content mr-2">Сетка:</span>
           <button
             v-for="count in [2, 3, 4]"

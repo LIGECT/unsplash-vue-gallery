@@ -1,32 +1,43 @@
 <script setup>
-import { computed } from "vue"; // Импортируем 'computed'
+import { computed } from "vue";
 import ImageCard from "./ImageCard.vue";
 
 const props = defineProps({
   images: Array,
   columnCount: {
-    // Определяем новый пропс
     type: Number,
-    default: 3, // Значение по умолчанию, если пропс не передан
+    default: 3,
   },
 });
 
-// Вычисляемое свойство для генерации классов сетки Tailwind
-const gridColsClass = computed(() => {
+const dynamicGridClass = computed(() => {
+  // Этот класс будет применяться для экранов LG (1024px) и выше.
+  // На меньших экранах будут действовать базовые адаптивные классы.
   switch (props.columnCount) {
     case 2:
-      return "grid-cols-2";
+      return "lg:grid-cols-2";
     case 4:
-      return "grid-cols-4";
-    case 3: // По умолчанию, если 3 или другое значение
+      return "lg:grid-cols-4";
+    case 3:
     default:
-      return "grid-cols-3";
+      return "lg:grid-cols-3";
   }
 });
 </script>
 
 <template>
-  <div :class="[gridColsClass, 'grid', 'gap-6', 'p-4', 'md:p-6']">
+  <div
+    :class="[
+      dynamicGridClass,
+      'grid',
+      'grid-cols-1', // Базово 1 колонка на очень маленьких экранах
+      'sm:grid-cols-2', // От sm (640px) - 2 колонки
+      'md:grid-cols-3', // От md (768px) - 3 колонки (это будет переопределено на lg)
+      'gap-6',
+      'p-4',
+      'md:p-6',
+    ]"
+  >
     <ImageCard v-for="image in images" :key="image.id" :image="image" />
   </div>
 </template>
