@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from "vue";
+import { ref, watch } from "vue";
 import { MagnifyingGlassIcon } from "@heroicons/vue/24/outline";
 
 const query = ref("");
@@ -7,7 +7,7 @@ const filter = ref("all");
 const emit = defineEmits(["search", "filterChange"]);
 
 function onSearch() {
-  if (query.value.trim()) {
+  if (filter.value === "all" && query.value.trim()) {
     emit("search", query.value.trim());
   }
 }
@@ -15,6 +15,12 @@ function onSearch() {
 function onFilterChange() {
   emit("filterChange", filter.value);
 }
+
+watch(filter, (newVal) => {
+  if (newVal === "liked") {
+    query.value = "";
+  }
+});
 </script>
 
 <template>
@@ -25,12 +31,14 @@ function onFilterChange() {
       <input
         v-model="query"
         @keyup.enter="onSearch"
-        class="input input-bordered flex-grow text-base-content placeholder-base-content/50 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 rounded-xl px-4 py-3 transition-all duration-300 border-base-300 bg-base-100"
+        :disabled="filter === 'liked'"
+        class="input input-bordered flex-grow text-base-content placeholder-base-content/50 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 rounded-xl px-4 py-3 transition-all duration-300 border-base-300 bg-base-100 disabled:opacity-50 disabled:cursor-not-allowed"
         placeholder="Например: cats, mountains, nature..."
       />
       <button
         @click="onSearch"
-        class="btn bg-emerald-500 border border-emerald-500 text-white hover:bg-emerald-600 hover:border-emerald-600 rounded-xl px-6 py-3 flex items-center justify-center gap-2 transition-all duration-300 shadow-md"
+        :disabled="filter === 'liked'"
+        class="btn bg-emerald-500 border border-emerald-500 text-white hover:bg-emerald-600 hover:border-emerald-600 rounded-xl px-6 py-3 flex items-center justify-center gap-2 transition-all duration-300 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <MagnifyingGlassIcon class="h-5 w-5" />
         <span class="hidden sm:inline">Поиск</span>

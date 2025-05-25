@@ -10,19 +10,16 @@ export function useImageSearch() {
   const currentPage = ref(1);
   const hasMoreApiImages = ref(true);
 
-  // Получить массив ID лайкнутых изображений из localStorage
   function getLikedImageIdsFromLocalStorage() {
     const data = localStorage.getItem("likedImageIds");
     return data ? JSON.parse(data) : [];
   }
 
-  // Получить все лайкнутые изображения (полные объекты) из localStorage
   function getAllLikedImagesFromLocalStorage() {
     const data = localStorage.getItem("likedImagesFull");
     return data ? JSON.parse(data) : [];
   }
 
-  // Сохранить лайк (добавить объект изображения)
   function saveLikedImage(image) {
     const likedIds = getLikedImageIdsFromLocalStorage();
     const likedFull = getAllLikedImagesFromLocalStorage();
@@ -35,7 +32,6 @@ export function useImageSearch() {
     }
   }
 
-  // Удалить лайк по id
   function removeLikedImage(imageId) {
     let likedIds = getLikedImageIdsFromLocalStorage();
     let likedFull = getAllLikedImagesFromLocalStorage();
@@ -47,13 +43,11 @@ export function useImageSearch() {
     localStorage.setItem("likedImagesFull", JSON.stringify(likedFull));
   }
 
-  // Проверка, лайкнуто ли изображение
   function isImageLiked(imageId) {
     const likedIds = getLikedImageIdsFromLocalStorage();
     return likedIds.includes(imageId);
   }
 
-  // Загрузка изображений из API
   async function fetchImages(query, page) {
     if (filter.value === "liked") {
       isLoading.value = false;
@@ -84,7 +78,6 @@ export function useImageSearch() {
     }
   }
 
-  // Поиск по запросу
   async function onSearch(query) {
     filter.value = "all";
     if (!query) {
@@ -98,7 +91,6 @@ export function useImageSearch() {
     await fetchImages(query, currentPage.value);
   }
 
-  // Загрузка следующей страницы
   async function loadMoreImages() {
     if (
       isLoading.value ||
@@ -112,7 +104,6 @@ export function useImageSearch() {
     await fetchImages(currentQuery.value, currentPage.value);
   }
 
-  // Обработчик скролла для подгрузки
   function handleScroll() {
     const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
 
@@ -135,12 +126,10 @@ export function useImageSearch() {
     window.removeEventListener("scroll", handleScroll);
   });
 
-  // Изменение фильтра
   function onFilterChange(value) {
     filter.value = value;
   }
 
-  // Отфильтрованные изображения для отображения
   const filteredImages = computed(() => {
     if (filter.value === "liked") {
       return getAllLikedImagesFromLocalStorage();

@@ -2,8 +2,6 @@
 import { ref, watch, onMounted } from "vue";
 import { HeartIcon as HeartIconOutline } from "@heroicons/vue/24/outline";
 import { HeartIcon as HeartIconSolid } from "@heroicons/vue/24/solid";
-
-// Импортируем composable
 import { useImageSearch } from "../composables/useImageSearch.js";
 
 const props = defineProps({
@@ -17,12 +15,10 @@ const { saveLikedImage, removeLikedImage, isImageLiked } = useImageSearch();
 
 const liked = ref(false);
 
-// Проверяем лайк при монтировании
 onMounted(() => {
   liked.value = isImageLiked(props.image.id);
 });
 
-// При изменении изображения (если компонент переиспользуется) обновляем liked
 watch(
   () => props.image.id,
   (newId) => {
@@ -30,7 +26,6 @@ watch(
   }
 );
 
-// Переключаем лайк
 function toggleLike() {
   if (liked.value) {
     removeLikedImage(props.image.id);
