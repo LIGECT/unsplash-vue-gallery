@@ -1,7 +1,10 @@
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, watch, onMounted } from "vue";
 import { HeartIcon as HeartIconOutline } from "@heroicons/vue/24/outline";
 import { HeartIcon as HeartIconSolid } from "@heroicons/vue/24/solid";
+
+// Импортируем composable
+import { useImageSearch } from "../composables/useImageSearch.js";
 
 const props = defineProps({
   image: {
@@ -10,41 +13,33 @@ const props = defineProps({
   },
 });
 
+const { saveLikedImage, removeLikedImage, isImageLiked } = useImageSearch();
+
 const liked = ref(false);
-const STORAGE_KEY = "likedImages";
 
-function getLikedImages() {
-  const data = localStorage.getItem(STORAGE_KEY);
-  return data ? JSON.parse(data) : [];
-}
+// Проверяем лайк при монтировании
+onMounted(() => {
+  liked.value = isImageLiked(props.image.id);
+});
 
-function setLikedImages(arr) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
-}
+// При изменении изображения (если компонент переиспользуется) обновляем liked
+watch(
+  () => props.image.id,
+  (newId) => {
+    liked.value = isImageLiked(newId);
+  }
+);
 
-function checkLiked() {
-  const likedImages = getLikedImages();
-  liked.value = likedImages.includes(props.image.id);
-}
-
+// Переключаем лайк
 function toggleLike() {
-  const likedImages = getLikedImages();
   if (liked.value) {
-    const index = likedImages.indexOf(props.image.id);
-    if (index > -1) {
-      likedImages.splice(index, 1);
-    }
+    removeLikedImage(props.image.id);
     liked.value = false;
   } else {
-    likedImages.push(props.image.id);
+    saveLikedImage(props.image);
     liked.value = true;
   }
-  setLikedImages(likedImages);
 }
-
-onMounted(() => {
-  checkLiked();
-});
 </script>
 
 <template>

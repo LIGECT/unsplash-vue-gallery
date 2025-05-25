@@ -3,7 +3,6 @@ import { searchPhotos } from "../api/unsplash.js";
 
 export function useImageSearch() {
   const images = ref([]);
-  const likedImages = ref([]);
   const isLoading = ref(false);
   const error = ref(null);
   const filter = ref("all");
@@ -11,24 +10,50 @@ export function useImageSearch() {
   const currentPage = ref(1);
   const hasMoreApiImages = ref(true);
 
-  function getLikedImagesFromLocalStorage() {
-    const data = localStorage.getItem("likedImages");
+  // Получить массив ID лайкнутых изображений из localStorage
+  function getLikedImageIdsFromLocalStorage() {
+    const data = localStorage.getItem("likedImageIds");
     return data ? JSON.parse(data) : [];
   }
 
-  function loadLikedImages() {
-    const likedIds = getLikedImagesFromLocalStorage();
-    likedImages.value = images.value.filter((img) => likedIds.includes(img.id));
+  // Получить все лайкнутые изображения (полные объекты) из localStorage
+  function getAllLikedImagesFromLocalStorage() {
+    const data = localStorage.getItem("likedImagesFull");
+    return data ? JSON.parse(data) : [];
   }
 
-  watch(filter, (newFilter) => {
-    if (newFilter === "liked") {
-      loadLikedImages();
-    } else {
-      likedImages.value = [];
-    }
-  });
+  // Сохранить лайк (добавить объект изображения)
+  function saveLikedImage(image) {
+    const likedIds = getLikedImageIdsFromLocalStorage();
+    const likedFull = getAllLikedImagesFromLocalStorage();
 
+    if (!likedIds.includes(image.id)) {
+      likedIds.push(image.id);
+      likedFull.push(image);
+      localStorage.setItem("likedImageIds", JSON.stringify(likedIds));
+      localStorage.setItem("likedImagesFull", JSON.stringify(likedFull));
+    }
+  }
+
+  // Удалить лайк по id
+  function removeLikedImage(imageId) {
+    let likedIds = getLikedImageIdsFromLocalStorage();
+    let likedFull = getAllLikedImagesFromLocalStorage();
+
+    likedIds = likedIds.filter((id) => id !== imageId);
+    likedFull = likedFull.filter((img) => img.id !== imageId);
+
+    localStorage.setItem("likedImageIds", JSON.stringify(likedIds));
+    localStorage.setItem("likedImagesFull", JSON.stringify(likedFull));
+  }
+
+  // Проверка, лайкнуто ли изображение
+  function isImageLiked(imageId) {
+    const likedIds = getLikedImageIdsFromLocalStorage();
+    return likedIds.includes(imageId);
+  }
+
+  // Загрузка изображений из API
   async function fetchImages(query, page) {
     if (filter.value === "liked") {
       isLoading.value = false;
@@ -59,6 +84,7 @@ export function useImageSearch() {
     }
   }
 
+  // Поиск по запросу
   async function onSearch(query) {
     filter.value = "all";
     if (!query) {
@@ -72,6 +98,7 @@ export function useImageSearch() {
     await fetchImages(query, currentPage.value);
   }
 
+  // Загрузка следующей страницы
   async function loadMoreImages() {
     if (
       isLoading.value ||
@@ -85,6 +112,7 @@ export function useImageSearch() {
     await fetchImages(currentQuery.value, currentPage.value);
   }
 
+  // Обработчик скролла для подгрузки
   function handleScroll() {
     const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
 
@@ -107,14 +135,15 @@ export function useImageSearch() {
     window.removeEventListener("scroll", handleScroll);
   });
 
+  // Изменение фильтра
   function onFilterChange(value) {
     filter.value = value;
   }
 
+  // Отфильтрованные изображения для отображения
   const filteredImages = computed(() => {
     if (filter.value === "liked") {
-      const likedIds = getLikedImagesFromLocalStorage();
-      return images.value.filter((img) => likedIds.includes(img.id));
+      return getAllLikedImagesFromLocalStorage();
     }
     return images.value;
   });
@@ -130,5 +159,8 @@ export function useImageSearch() {
     loadMoreImages,
     onFilterChange,
     hasMoreApiImages,
+    saveLikedImage,
+    removeLikedImage,
+    isImageLiked,
   };
 }
